@@ -125,8 +125,55 @@ dbt test
 **Observe which tests pass and which fail.**
 
 > 1. Run a SQL query to check which rows failed.
+
+SELECT 
+sale_dollars,
+bottles_sold,
+state_bottle_retail,
+ROUND(sale_dollars,1) AS rounded_sales,
+TRUNC(bottles_sold * state_bottle_retail, 1) AS truncated_calc
+ FROM `project-8d552288-1acb-4a23-893.liquor_demo.fact_sales`
+ WHERE ROUND(sale_dollars,1) - TRUNC(bottles_sold * state_bottle_retail, 1) != 0 LIMIT 50;
+
 > 2. Run a SQL query to get the min and max values of `pack` and `bottle_volume_ml` in `liquor_sales_star.dim_item`.
+SELECT  
+MIN(pack) AS min_pack,
+MAX(pack) AS max_pack,
+MIN(bottle_volume_ml) AS min_bottle_volume,
+MAX(bottle_volume_ml) AS max_bottle_volume 
+
+FROM `project-8d552288-1acb-4a23-893.liquor_demo_star.dim_item` 
+
 > 3. Then, set the `min_value` and `max_value` in the `dbt_utils.accepted_range` test in `models/star/schema.yml` to the min and max values respectively.
+
+min_pack = 1
+max_pack = 160
+min_bottle_volume = 0
+max_bottle_volume = 378000
+
+Add in models/star/schema.yml
+
+ - name: pack
+        tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 1
+                max_value: 160
+
+      - name: bottle_volume_ml
+        tests: 
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 378000
+
+Also,
+
+Change # expression: "ROUND(sale_dollars, 1) = ROUND(bottles_sold * state_bottle_retail, 1) < 1.0>"
+from TRUNC to ROUND due to dec places diff.
+
+in dbt_utils_expression_is_true & mode/schema.yml
+
 
 ### Installing and Configuring `dbt-expectations`
 

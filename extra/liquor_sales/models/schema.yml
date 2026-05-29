@@ -12,9 +12,9 @@ models:
         tests:
           - unique
           - not_null
-          # - dbt_expectations.expect_column_values_to_be_of_type:
-          #     arguments:
-          #       column_type: string
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: string
       - name: store_number
         description: "The foreign key to the store dimension table"
         tests:
@@ -22,19 +22,68 @@ models:
               arguments:
                 to: ref('dim_store')
                 field: store_number
-      # - name: date
-      #   tests:
-      #     - dbt_utils.accepted_range:
-      #         arguments:
-      #           min_value: "PARSE_DATE('%F', '2012-01-01')"
-      #           max_value: "CURRENT_DATE()"
-          # - dbt_expectations.expect_column_values_to_be_of_type:
-          #     arguments:
-          #       column_type: date
-    # tests:
-    #   - dbt_utils.expression_is_true:
-    #       arguments:
-    #         expression: "ROUND(sale_dollars, 1) = TRUNC(bottles_sold * state_bottle_retail, 1)"
-    #         severity: error # accepts only `error` and `warn` default is error
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: string
+      - name: date
+        tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: "PARSE_DATE('%F', '2012-01-01')"
+                max_value: "CURRENT_DATE()"
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: date
+          # - dbt_expectations.expect_row_values_to_have_recent_data:   # additional
+          #       datepart: day
+          #       interval: 7
+      - name: item_number
+        tests:
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: string
+      - name: state_bottle_cost
+        tests:
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: float64
+      - name: state_bottle_retail
+        tests:
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: float64
+          # - dbt_expectations.expect_column_values_to_be_between:  #additional
+          #     min_value: 0
+          #     max_value: 5000
+      - name: bottles_sold
+        tests:
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: int64
+          # - dbt_utils.accepted_range:                              #additional
+          #     min_value: 0
+          #     max_value: 100000
+      - name: sale_dollars
+        tests:
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: float64
+          - dbt_utils.not_null_proportion:                        #additional
+              at_least: 0.99
+      - name: volume_sold_liters
+        tests:
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: float64  
+      - name: volume_sold_gallons
+        tests:
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: float64                       
+    tests:
+      - dbt_utils.expression_is_true:
+            # expression: "ROUND(sale_dollars, 1) = TRUNC(bottles_sold * state_bottle_retail, 1)"
+          expression: "ABS(ROUND(sale_dollars, 1) - ROUND(bottles_sold * state_bottle_retail, 1)) < 1.0"
+          severity: warn # accepts only `error` and `warn` default is error
 
 
